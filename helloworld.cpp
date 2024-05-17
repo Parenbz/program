@@ -3,23 +3,21 @@
 #include <vector>
 #include <cmath>
 
-// Grid size (Nx, Ny, Nz)
+// Сетка
 const int Nx = 200;
 const int Ny = 200;
 const int Nz = 200;
 
-// Heat source position and value
+// Источник тепла
 const int hx = Nx / 2;
 const int hy = Ny / 2;
 const int hz = Nz / 2;
 const double heat_source_value = 100.0;
 
-// Number of iterations
 const int iterations = 100;
 
 const double k = .01;
 
-// Function to initialize the grid
 void initialize_grid(std::vector<std::vector<std::vector<double>>>& grid, int dx, int dy, int dz) {
     for (int x = 0; x < grid.size(); x++) {
         for (int y = 0; y < grid[0].size(); y++) {
@@ -34,7 +32,7 @@ void initialize_grid(std::vector<std::vector<std::vector<double>>>& grid, int dx
     }
 }
 
-// Function to print a slice of the grid (for debugging)
+// Печатает слой сетки
 void print_slice(const std::vector<std::vector<std::vector<double>>>& grid, int z) {
     for (int x = 0; x < Nx; ++x) {
         for (int y = 0; y < Ny; ++y) {
@@ -44,11 +42,8 @@ void print_slice(const std::vector<std::vector<std::vector<double>>>& grid, int 
     }
 }
 
-// Function to exchange boundary data between processes
 void exchange_boundaries(std::vector<std::vector<std::vector<double>>>& grid, int rank, int nx, int ny, int nz,
                          int sx, int sy, int sz, int cx, int cy, int cz) {
-    // Send and receive boundaries with neighboring processes
-    // MPI_Sendrecv for top/bottom boundaries
     MPI_Status status;
     //x
     if (nx > 1) {
@@ -306,22 +301,17 @@ int main(int argc, char* argv[]) {
     int dy = (cy < Ny % ny) ? cy * sy - 1: Ny % ny + cy * sy - 1;
     int dz = (cz < Nz % nz) ? cz * sz - 1: Nz % nz + cz * sz - 1;
 
-    // Allocate the local grid (with extra space for ghost cells)
     std::vector<std::vector<std::vector<double>>> grid(sx + 2, std::vector<std::vector<double>>(sy + 2, std::vector<double>(sz + 2, 0.0)));
     std::vector<std::vector<std::vector<double>>> new_grid(sx + 2, std::vector<std::vector<double>>(sy + 2, std::vector<double>(sz + 2, 0.0)));
 
-    // Initialize the grid with cold walls and a heat source at the center
     initialize_grid(grid, dx, dy, dz);
 
     MPI_Barrier(MPI_COMM_WORLD);
-    t = MPI_WTime();
+    t = MPI_Wtime();
 
-    // Time-stepping loop
     for (int iter = 0; iter < iterations; iter++) {
-        // Exchange boundary data with neighboring processes
         exchange_boundaries(grid, rank, nx, ny, nz, sx, sy, sz, cx, cy, cz);
 
-        // Update the grid using the finite difference method
         for (int x = 1; x <= sx; x++) {
             for (int y = 1; y <= sy; y++) {
                 for (int z = 1; z <= sz; z++) {
@@ -335,14 +325,12 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        // Swap grids
         grid.swap(new_grid);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-    t = MPI_WTime() - t;
+    t = MPI_Wtime() - t;
 
-    // Gather results to the root process
     if (rank == 0) {
         std::vector<std::vector<std::vector<double>>> full_grid(Nx, std::vector<std::vector<double>>(Ny, std::vector<double>(Nz, 0.0)));
         std::vector<double> buf(Nx * Ny * Nz);
@@ -376,7 +364,6 @@ int main(int argc, char* argv[]) {
             }
         }
         
-        // Print the central slice for visualization
         //print_slice(full_grid, hz);
     } else {
         std::vector<double> buf(sx * sy * sz);
