@@ -307,7 +307,7 @@ int main(int argc, char* argv[]) {
     initialize_grid(grid, dx, dy, dz);
 
     MPI_Barrier(MPI_COMM_WORLD);
-    t = MPI_Wtime();
+    double t = MPI_Wtime();
 
     for (int iter = 0; iter < iterations; iter++) {
         exchange_boundaries(grid, rank, nx, ny, nz, sx, sy, sz, cx, cy, cz);
