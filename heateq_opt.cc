@@ -4,9 +4,9 @@
 #include <cmath>
 
 // Сетка
-const int Nx = 100;
-const int Ny = 100;
-const int Nz = 100;
+const int Nx = 200;
+const int Ny = 200;
+const int Nz = 200;
 
 // Источник тепла
 const int hx = Nx / 2;
