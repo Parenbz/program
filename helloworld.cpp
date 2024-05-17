@@ -378,7 +378,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (rank == 0) {
-        std::cout << "p = " << size << ", t = " << t << std::endl;
+        std::cout << size << " " << t << std::endl;
     }
 
     MPI_Finalize();
