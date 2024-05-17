@@ -313,6 +313,9 @@ int main(int argc, char* argv[]) {
     // Initialize the grid with cold walls and a heat source at the center
     initialize_grid(grid, dx, dy, dz);
 
+    MPI_Barrier(MPI_COMM_WORLD);
+    t = MPI_WTime();
+
     // Time-stepping loop
     for (int iter = 0; iter < iterations; iter++) {
         // Exchange boundary data with neighboring processes
@@ -335,6 +338,9 @@ int main(int argc, char* argv[]) {
         // Swap grids
         grid.swap(new_grid);
     }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    t = MPI_WTime() - t;
 
     // Gather results to the root process
     if (rank == 0) {
@@ -382,6 +388,10 @@ int main(int argc, char* argv[]) {
             }
         }
         MPI_Send(&buf[0], sx * sy * sz, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD);
+    }
+
+    if (rank == 0) {
+        std::cout << "p = " << size << ", t = " << t << std::endl;
     }
 
     MPI_Finalize();
